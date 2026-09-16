@@ -1,0 +1,46 @@
+# Limits and qualification boundaries
+
+This kit is deliberately narrow and honest about what it does not do.
+
+## It cannot
+
+- **Synthesize a sound from nothing.** It re-wraps presets that already exist on disk and
+  that you already own. It does not model or generate plug-in state.
+- **Serve plug-ins that don't store presets as files.** If presets live inside the plug-in
+  (e.g. KORG opsix/wavestate) or in a database (Kick 2, Microtonic, Synplant's blobs), there
+  is no file to wrap.
+- **Guarantee cross-machine or cross-version recall.** A Rack made here references the same
+  plug-in and, for sample-based instruments, the same sample content. Absolute sample paths,
+  VST2-vs-VST3 identity, and plug-in version differences can all break recall on another
+  machine. The native preset must match the **installed plug-in version** (an old preset can
+  load as init).
+- **Prove a sound by building a file.** Structural validity ≠ audible recall.
+
+## Qualification
+
+- Every output is labelled `[capture test]` until a human loads it in Live and confirms the
+  plug-in opens with the correct sound. Only then is that plug-in/format qualified; pass
+  `--qualified` to drop the label for known-good families.
+- Synthesis is proven for Arturia VST2, u-he VST3 and Vital VST3 (see
+  [SYNTHESIS.md](SYNTHESIS.md)). Other plug-ins are unqualified until load-tested, even if a
+  state source is provided.
+
+## Platform
+
+- macOS is verified. Windows is written to be portable (Live's plug-in DB has the same schema
+  there; the only OS-specific primitive, atomic no-overwrite publishing, has an `O_EXCL`
+  fallback) but is **not yet tested**. See the bring-up checklist in [../AGENTS.md](../AGENTS.md).
+
+## Legal
+
+Wrapping presets you own for your own use is a local convenience. Redistributing factory
+content is a separate licensing question this kit takes no position on — it ships no presets
+and no plug-in content.
+
+## Safety properties (enforced in code)
+
+- Inputs are read with a stability check that rejects a file changing mid-read.
+- Publishing is atomic and never overwrites an existing file (hard-link, or `O_EXCL`).
+- Rack builders prove every byte outside the plug-in node is unchanged and re-parse output.
+- The installer refuses to merge or replace an existing folder and verifies against a
+  manifest hash before and after copying.

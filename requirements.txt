@@ -1,0 +1,1 @@
+# No dependencies. rack-preset-kit uses only the Python 3.9+ standard library.
