@@ -148,5 +148,6 @@ tests/      offline test suite (python3 tests/test_rackkit.py)
 AGENTS.md   how to extend the kit (hand this to a coding agent) + Windows bring-up
 ```
 
-See [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) for the mechanism and
-[docs/LIMITS.md](docs/LIMITS.md) for the boundaries. MIT licensed.
+See [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) for the mechanism,
+[docs/LIMITS.md](docs/LIMITS.md) for the boundaries, and [CHANGELOG.md](CHANGELOG.md) for how
+this evolved (including the mistakes we corrected). MIT licensed.
