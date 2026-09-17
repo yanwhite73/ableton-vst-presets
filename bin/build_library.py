@@ -28,6 +28,8 @@ def main() -> None:
     parser.add_argument("--xmp", action="store_true", help="Write Ableton Folder Info keyword sidecars")
     parser.add_argument("--favourite-color", default=None,
                         help="Ableton colour index for favourites (your choice; omit for no colour)")
+    parser.add_argument("--vendor-folders", action="store_true",
+                        help="Nest output under the plug-in vendor: <vendor>/<instrument>/<category>/")
     args = parser.parse_args()
 
     if args.staging.exists() and any(args.staging.iterdir()):
@@ -40,7 +42,8 @@ def main() -> None:
     skel = {c: engine.gzip_unpack(engine.stable_read(p or skeletons.default(c)))
             for c, p in (("vst2", args.skeleton_vst2), ("vst3", args.skeleton_vst3))}
     manifest = builder.build_catalog(catalog["entries"], args.staging, identities, skel,
-                                     xmp_tags=args.xmp, favourite_color=args.favourite_color)
+                                     xmp_tags=args.xmp, favourite_color=args.favourite_color,
+                                     vendor_folders=args.vendor_folders)
     meta = args.staging / "_manifest"
     meta.mkdir(exist_ok=True)
     engine.publish_new(meta / "manifest.json", (json.dumps(manifest, indent=2) + "\n").encode())

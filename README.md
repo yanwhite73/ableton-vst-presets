@@ -21,7 +21,11 @@ from Live's own plug-in cache) plus a native preset file.
   saved Rack to learn the transform — the per-vendor "state source" work in
   [docs/ADD_A_PLUGIN.md](docs/ADD_A_PLUGIN.md).
 - It cannot help plug-ins that keep presets **inside the plug-in** or in a **database**
-  rather than as files (e.g. KORG opsix/wavestate, Kick 2, Microtonic).
+  rather than as files (e.g. KORG opsix/wavestate, Valhalla's built-in presets, Kick 2,
+  Microtonic).
+- It builds **Instrument Racks only** — effects aren't supported yet (they'd need an Audio
+  Effect Rack path). Full coverage — what works and what's skipped, with reasons — is in
+  [docs/COVERAGE.md](docs/COVERAGE.md).
 - **Appearing in the browser is not success.** Only loading the produced Rack in Live and
   hearing the right sound qualifies a given plug-in/format. Every output is labelled
   `[capture test]` until you confirm it.
@@ -39,16 +43,18 @@ the results). macOS is verified; Windows is written to be portable but not yet t
 ```sh
 # Build categorised Racks for every instrument the kit can handle, into a staging folder.
 python3 bin/build_all.py --staging ./out/racks
-# Review ./out/racks (each instrument gets vstname/category/preset.adg), then install:
+# Review ./out/racks (layout: vendor/instrument/category/preset.adg), then install:
 python3 bin/build_all.py --staging ./out/racks2 --install
 ```
 
 `build_all` scans Live's plug-in cache and picks a provider per instrument automatically —
 Arturia from its database (real categories), u-he / Vital / Surge and other folder-organised
-vendors from their preset folders. It auto-detects the Arturia DB and your User Library, and
+vendors from their preset folders. Output is nested by vendor
+(`<vendor>/<instrument>/<category>/`) by default; pass `--no-vendor-folders` for a flat
+`<instrument>/<category>/` layout. It auto-detects the Arturia DB and your User Library, and
 anything it can't place (unknown vendor, unreadable folder) is reported and skipped, never
 fatal. Limit it with `--only "CS-80 V3,Vital"`; override paths with `--arturia-db`,
-`--destination`, `--live-db`.
+`--destination`, `--live-db`. See [docs/COVERAGE.md](docs/COVERAGE.md) for what works.
 
 ## Finer control (the same steps, à la carte)
 
@@ -89,7 +95,7 @@ bin/        build_all (one-command orchestrator), scan_instruments, find_presets
             catalog_arturia, build_library, install, synthesize, inspect_template,
             convert, make_skeleton
 skeletons/  packaged empty-state Rack shells (vst2.adg, vst3.adg)
-docs/       HOW_IT_WORKS, SYNTHESIS, LIMITS, ADD_A_PLUGIN
+docs/       HOW_IT_WORKS, COVERAGE, SYNTHESIS, LIMITS, ADD_A_PLUGIN
 tests/      offline test suite (python3 tests/test_rackkit.py)
 AGENTS.md   how to extend the kit (hand this to a coding agent) + Windows bring-up
 ```

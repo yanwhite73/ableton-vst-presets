@@ -10,8 +10,15 @@ from __future__ import annotations
 
 from collections import Counter
 from pathlib import Path, PurePosixPath
+import re
 
 from . import cache, engine, racks, statesources, xmp
+
+_SAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def component(value) -> str:
+    return _SAFE.sub("-", str(value or "")).strip(" .") or "Unknown"
 
 
 def safe_relative(rel: str) -> PurePosixPath:
@@ -21,7 +28,8 @@ def safe_relative(rel: str) -> PurePosixPath:
     return path
 
 
-def build_one(entry: dict, staging: Path, identities: dict, skeleton_xml: dict) -> dict:
+def build_one(entry: dict, staging: Path, identities: dict, skeleton_xml: dict,
+              vendor_folders: bool = False) -> dict:
     native_path = Path(entry["native"])
     native = engine.stable_read(native_path)  # raises OSError (incl. PermissionError) or ValueError
     src = statesources.get(entry["source"]) if entry.get("source") \
@@ -37,28 +45,33 @@ def build_one(entry: dict, staging: Path, identities: dict, skeleton_xml: dict) 
         candidate = racks.build_vst2_rack(skeleton_xml["vst2"], int(uid), payload)
     else:
         candidate = racks.build_vst3_rack(skeleton_xml["vst3"], str(uid), *payload)
-    out = staging / safe_relative(entry["output_relative"])
+    rel = entry["output_relative"]
+    if vendor_folders:
+        rel = str(PurePosixPath(component(ident.vendor), rel))  # <vendor>/<instrument>/<category>/...
+    out = staging / safe_relative(rel)
     out.parent.mkdir(parents=True, exist_ok=True)
     report = engine.publish_candidate(candidate, out)
-    return {"path": entry["output_relative"], "sha256": report["output_sha256"],
+    return {"path": rel, "sha256": report["output_sha256"],
             "instrument": entry["instrument"], "source": src.name,
             "native": entry["native"], "native_sha256": engine.digest(native),
             "keywords": entry.get("keywords", []), "favourite": bool(entry.get("favourite"))}
 
 
 def build_catalog(entries: list, staging: Path, identities: dict, skeleton_xml: dict,
-                  xmp_tags: bool = False, favourite_color: str = None) -> dict:
+                  xmp_tags: bool = False, favourite_color: str = None,
+                  vendor_folders: bool = False) -> dict:
     """Build every entry into ``staging``; return a manifest dict (caller writes it).
 
     With ``xmp_tags``, also write an Ableton Folder Info XMP sidecar per folder (keywords,
-    and a favourite colour only if ``favourite_color`` is given).
+    and a favourite colour only if ``favourite_color`` is given). With ``vendor_folders``,
+    each output is nested under its plug-in vendor (``<vendor>/<instrument>/<category>/...``).
     """
     staging = Path(staging)
     staging.mkdir(parents=True, exist_ok=True)
     files, errors, by_source, by_instrument = [], [], Counter(), Counter()
     for entry in entries:
         try:
-            record = build_one(entry, staging, identities, skeleton_xml)
+            record = build_one(entry, staging, identities, skeleton_xml, vendor_folders=vendor_folders)
         except PermissionError as error:
             errors.append({"native": entry.get("native"), "instrument": entry.get("instrument"),
                            "error": f"permission denied: {error}"})
