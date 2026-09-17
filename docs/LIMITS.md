@@ -21,9 +21,10 @@ This kit is deliberately narrow and honest about what it does not do.
 
 ## Qualification
 
-- Every output is labelled `[capture test]` until a human loads it in Live and confirms the
-  plug-in opens with the correct sound. Only then is that plug-in/format qualified; pass
-  `--qualified` to drop the label for known-good families.
+- The single-preset tools (`synthesize`, `convert`) label their output `[capture test]` until
+  you pass `--qualified`. The batch tools (`build_all`, `build_library`) write final names — so
+  qualify a plug-in/format by load-testing a sample first, then batch-build the rest. A
+  plug-in that opens with the correct sound is qualified; structural validity alone is not.
 - Synthesis is proven for Arturia VST2, u-he VST3 and Vital VST3 (see
   [SYNTHESIS.md](SYNTHESIS.md)). Other plug-ins are unqualified until load-tested, even if a
   state source is provided.

@@ -26,9 +26,11 @@ from Live's own plug-in cache) plus a native preset file.
 - It builds **Instrument Racks only** — effects aren't supported yet (they'd need an Audio
   Effect Rack path). Full coverage — what works and what's skipped, with reasons — is in
   [docs/COVERAGE.md](docs/COVERAGE.md).
-- **Appearing in the browser is not success.** Only loading the produced Rack in Live and
-  hearing the right sound qualifies a given plug-in/format. Every output is labelled
-  `[capture test]` until you confirm it.
+- **Appearing in the browser is not success.** Only loading a produced Rack in Live and
+  hearing the right sound qualifies a given plug-in/format. The single-preset tools
+  (`synthesize`, `convert`) label their output `[capture test]` until you pass `--qualified`;
+  the batch tools (`build_all`, `build_library`) write final names — so **load-test a sample
+  of a plug-in/format before trusting a whole library built from it.**
 
 Nothing is ever overwritten; no plug-in is loaded; no DAW state or database is written.
 
