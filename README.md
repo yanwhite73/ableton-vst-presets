@@ -70,19 +70,30 @@ Moved your presets, or a vendor isn't listed? Override with `--root <folder>`,
 `--arturia-db <path>`, `--live-db <path>`, `--destination <path>`. Anything not found is
 skipped with a message — it never crashes.
 
-**Run it — one command:**
+**Run it.** Start with a few presets, confirm they sound right in Live, *then* do the whole
+library. Three steps:
 
 ```sh
-# 1. Build into a folder you choose. Nothing is installed yet; review it first.
-python3 bin/build_all.py --staging ./racks
+# 1. See what you've got — instrument names come straight from Live's plug-in list.
+python3 bin/scan_instruments.py --out ./out          # -> ./out/INSTRUMENTS.md
 
-# 2. Happy with ./racks? Build + install into Live's User Library (non-destructive):
-python3 bin/build_all.py --staging ./racks-install --install
+# 2. Try ONE instrument first: build its presets and install them (non-destructive).
+python3 bin/build_all.py --staging ./test --only "CS-80 V3" --install
+#    Restart Live, open User Library -> Instruments -> Arturia -> CS-80 V3, load a few,
+#    and check they sound right. Nothing else in your library is touched.
+
+# 3. Happy? Do the whole library — already-installed instruments are skipped automatically.
+python3 bin/build_all.py --staging ./racks --install
 ```
 
 Output is laid out `vendor/instrument/category/preset.adg` (add `--no-vendor-folders` for a
-flat `instrument/category/`). Narrow it with `--only "CS-80 V3,Vital"`. See
+flat `instrument/category/`); narrow any run with `--only "CS-80 V3,Vital"`. See
 [docs/COVERAGE.md](docs/COVERAGE.md) for which plug-ins work.
+
+**Prefer not to use a terminal**, or your presets live somewhere non-standard? Hand
+[AGENTS.md](AGENTS.md) to a coding agent (Claude Code, Cursor, …) and it will run these on your
+machine — find your presets, do the test batch, then the full library (see
+[When to bring in an AI coding agent](#when-to-bring-in-an-ai-coding-agent)).
 
 **See it in Live.** The Racks land in your User Library, but **Live won't show them until it
 re-indexes** — restart Live (or wait for its next scan). Then browse
