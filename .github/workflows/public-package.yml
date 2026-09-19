@@ -1,0 +1,29 @@
+name: Public package gate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Keep this gate dependency-free: fetch the event ref with the runner's Git instead of
+      # loading a third-party action. GITHUB_REF and GITHUB_SHA identify the exact event revision.
+      - name: Check out the event revision
+        env:
+          REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}.git
+        run: |
+          git init .
+          git remote add origin "$REPOSITORY_URL"
+          git fetch --no-tags --depth=1 origin "$GITHUB_REF"
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+
+      - name: Test and audit public package
+        run: python3 tools/build_public_package.py --check-only

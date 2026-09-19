@@ -4,6 +4,20 @@ An honest log of how this kit evolved — including the mistakes and overclaims 
 because getting to genuinely shareable content meant getting several things wrong first.
 Newest first. Dates are development dates; the project is pre-1.0.
 
+## 2026-09-19
+
+### Added
+- A deterministic public-package builder with an explicit source allowlist, embedded SHA-256
+  manifest, symlink/path/credential checks, and a clean-package regression suite.
+- Project-level ignore rules for local configuration, secrets, README-generated Rack trees,
+  diagnostics, virtual environments, and release output.
+- A read-only, dependency-free GitHub workflow that runs the package gate on pushes and pull
+  requests.
+
+### Corrected
+- Release packaging no longer depends on recursively zipping a developer checkout, which could
+  include machine-local files that are useful locally but unsafe to publish.
+
 ## 2026-09-17
 
 ### Added

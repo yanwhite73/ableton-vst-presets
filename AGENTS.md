@@ -64,4 +64,11 @@ expected:
 
 `docs/HOW_IT_WORKS.md` (mechanism), `docs/SYNTHESIS.md` (what's proven + rules),
 `docs/LIMITS.md` (boundaries), `docs/ADD_A_PLUGIN.md` (worked example). Run the suite with
-`python3 tests/test_rackkit.py`.
+`python3 -m unittest discover -s tests -p 'test_*.py'`.
+
+## Before publishing or sharing a ZIP
+
+Run `python3 tools/build_public_package.py`. It runs the offline suite, builds a deterministic
+allowlisted ZIP, rejects symlinks, local/generated folders, machine-specific absolute paths, and
+credential-like content, then writes an embedded SHA-256 manifest. Never package the checkout with
+`zip -r`: that can include ignored local configuration and generated Racks.

@@ -155,10 +155,26 @@ bin/        build_all (one-command orchestrator), scan_instruments, find_presets
             convert, make_skeleton
 skeletons/  packaged empty-state Rack shells (vst2.adg, vst3.adg)
 docs/       HOW_IT_WORKS, COVERAGE, SYNTHESIS, LIMITS, ADD_A_PLUGIN
-tests/      offline test suite (python3 tests/test_rackkit.py)
+tests/      offline test suite (python3 -m unittest discover -s tests -p 'test_*.py')
+tools/      deterministic, audited public-package builder
 AGENTS.md   how to extend the kit (hand this to a coding agent) + Windows bring-up
 ```
 
 See [docs/HOW_IT_WORKS.md](docs/HOW_IT_WORKS.md) for the mechanism,
 [docs/LIMITS.md](docs/LIMITS.md) for the boundaries, and [CHANGELOG.md](CHANGELOG.md) for how
 this evolved (including the mistakes we corrected). MIT licensed.
+
+## Building a shareable source package
+
+Maintainers can produce the public ZIP without sweeping machine-local files into it:
+
+```sh
+python3 tools/build_public_package.py
+```
+
+The builder runs the complete offline test suite, packages only the explicit public source
+allowlist, rejects symlinks, generated/local folders, machine-specific absolute paths and
+credential-like content, and writes `dist/rack-preset-kit.zip` with an embedded SHA-256 manifest.
+Two unchanged builds are byte-identical. Local `.env`, `*.local.json`, generated Rack trees,
+diagnostics and build output are ignored and never included. GitHub repeats the same gate on pushes
+and pull requests using a read-only, dependency-free workflow. Do not use `zip -r` for a release.
