@@ -20,7 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from rackkit import cache, engine, racks, skeletons, statesources, xmp  # noqa: E402
+from rackkit import cache, engine, library_index, racks, skeletons, statesources, xmp  # noqa: E402
 
 _XNS = {"ablFR": "https://ns.ableton.com/xmp/fs-resources/1.0/",
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#"}
@@ -157,6 +157,64 @@ class Xmp(unittest.TestCase):
         rels = [rel for rel, _ in xmp.sidecar_records(files)]
         self.assertTrue(all("Ableton Folder Info" in r for r in rels))
         self.assertEqual(len(rels), 2)  # one sidecar per folder
+
+
+class LibraryIndex(unittest.TestCase):
+    """Rebuild identity/hash/metadata from installed Racks alone (no manifest)."""
+
+    def _library(self, root: Path):
+        uid = "d3d6e5690c2a4ad3123456787541734d"
+        vst2 = racks.build_vst2_rack(read_skel("vst2"), 1129535027, b"state-a")
+        vst3 = racks.build_vst3_rack(read_skel("vst3"), uid, b"state-b")
+        files = {
+            "Arturia/CS-80 V3/Pad/Glass.adg": vst2,
+            "Arturia/CS-80 V3/Pad/Glass Copy.adg": vst2,            # identical content
+            "u-he/Tyrell/Leads/Saw.adg": vst3,
+        }
+        for rel, xml in files.items():
+            (root / rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / rel).write_bytes(engine.gzip_pack(xml))
+        (root / "Native" / "Rack.adg").parent.mkdir(parents=True)
+        (root / "Native" / "Rack.adg").write_bytes(engine.gzip_pack(b"<Ableton><GroupDevicePreset/></Ableton>"))
+        (root / "Native" / "Broken.adg").write_bytes(b"not gzip")
+        for rel, data in xmp.sidecar_records([
+                {"path": "Arturia/CS-80 V3/Pad/Glass.adg", "favourite": True,
+                 "keywords": ["Instrument|CS-80 V3", "Type|Pad", "Bank|Factory"]}], favourite_color="2"):
+            (root / rel).parent.mkdir(parents=True, exist_ok=True)
+            (root / rel).write_bytes(data)
+        return uid
+
+    def test_identity_hash_and_sidecar_metadata(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            uid = self._library(root)
+            index = library_index.index_tree(root)
+            self.assertEqual(index["schema"], library_index.SCHEMA)
+            by_path = {e["path"]: e for e in index["entries"]}
+            self.assertEqual(sorted(by_path), ["Arturia/CS-80 V3/Pad/Glass Copy.adg",
+                                               "Arturia/CS-80 V3/Pad/Glass.adg", "u-he/Tyrell/Leads/Saw.adg"])
+            glass = by_path["Arturia/CS-80 V3/Pad/Glass.adg"]
+            self.assertEqual((glass["format"], glass["unique_id"]), ("vst2", 1129535027))
+            self.assertEqual((glass["instrument"], glass["category"], glass["bank"], glass["colors"]),
+                             ("CS-80 V3", "Pad", "Factory", ["2"]))
+            saw = by_path["u-he/Tyrell/Leads/Saw.adg"]
+            self.assertEqual((saw["format"], saw["class_uid"]), ("vst3", uid))
+            self.assertEqual((saw["instrument"], saw["category"], saw["colors"]), ("Tyrell", "Leads", []))
+            copy = by_path["Arturia/CS-80 V3/Pad/Glass Copy.adg"]
+            self.assertEqual(copy["sha256"], glass["sha256"], "duplicate content is visible to consumers")
+            self.assertNotEqual(copy["id"], glass["id"], "IDs are per location")
+            self.assertEqual({e["path"] for e in index["errors"]}, {"Native/Rack.adg", "Native/Broken.adg"})
+            self.assertEqual(index["counts"]["formats"], {"vst2": 2, "vst3": 1})
+
+    def test_uid_round_trip_and_index_is_read_only(self):
+        uid = "d3d6e5690c2a4ad3123456787541734d"
+        self.assertEqual(library_index.class_uid_from_fields(racks.uid_fields(uid)), uid)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self._library(root)
+            before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+            library_index.index_tree(root)
+            self.assertEqual(before, {p: p.read_bytes() for p in root.rglob("*") if p.is_file()})
 
 
 if __name__ == "__main__":

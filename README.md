@@ -130,7 +130,11 @@ python3 bin/catalog_arturia.py --instrument "CS-80 V3" --out ./out/cs80.json   #
 python3 bin/find_presets.py --root <folder> --name "Vital" --out ./out/vital.json  # folders = categories
 python3 bin/build_library.py --catalog ./out/cs80.json --staging ./out/cs80_stage
 python3 bin/install.py --staging ./out/cs80_stage --manifest-sha256 <hash from manifest.json>
+python3 bin/index_library.py --out ./out/library-index.json      # describe an installed library
 ```
+
+`index_library` is read-only and needs no manifest. It records each Rack's plug-in identity,
+file hash and sidecar metadata for other tools. See [docs/LIBRARY_INDEX.md](docs/LIBRARY_INDEX.md).
 
 The state source (Arturia archive / u-he `.h2p` / Vital `.vital` / Surge `.fxp`) is
 auto-detected; force it with `--source`. Skeletons default to the packaged empty-state shells
@@ -149,12 +153,13 @@ in `skeletons/`; override with your own clean Rack via `--skeleton` (see `bin/ma
 
 ```
 rackkit/    engine, racks (VST2/VST3 builders), statesources, cache, synth, skeletons,
-            providers (folder + Arturia-DB catalogues), builder, installer, locations, adapters
+            providers (folder + Arturia-DB catalogues), builder, installer, locations, adapters,
+            library_index
 bin/        build_all (one-command orchestrator), scan_instruments, find_presets,
             catalog_arturia, build_library, install, synthesize, inspect_template,
-            convert, make_skeleton
+            convert, make_skeleton, index_library
 skeletons/  packaged empty-state Rack shells (vst2.adg, vst3.adg)
-docs/       HOW_IT_WORKS, COVERAGE, SYNTHESIS, LIMITS, ADD_A_PLUGIN
+docs/       HOW_IT_WORKS, COVERAGE, SYNTHESIS, LIMITS, ADD_A_PLUGIN, LIBRARY_INDEX
 tests/      offline test suite (python3 -m unittest discover -s tests -p 'test_*.py')
 tools/      deterministic, audited public-package builder
 AGENTS.md   how to extend the kit (hand this to a coding agent) + Windows bring-up

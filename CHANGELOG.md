@@ -4,6 +4,16 @@ An honest log of how this kit evolved — including the mistakes and overclaims 
 because getting to genuinely shareable content meant getting several things wrong first.
 Newest first. Dates are development dates; the project is pre-1.0.
 
+## 2026-09-25
+
+### Added
+- `bin/index_library.py` and `rackkit/library_index.py`: a read-only index of an installed Rack
+  library. It records plug-in format and exact identity, file hash, and sidecar
+  Instrument/Type/Bank/colour for every single-plug-in Rack, without needing the original build
+  manifest. On a real library of about 11.4k Racks it indexed 11,141 (9,850 VST2, 1,291 VST3)
+  in about 24 s, correctly skipped 222 native Live racks, and found 6 duplicated hashes. Consumer
+  rules are in `docs/LIBRARY_INDEX.md`.
+
 ## 2026-09-19
 
 ### Added
